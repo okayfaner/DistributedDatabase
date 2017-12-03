@@ -1,3 +1,5 @@
+package edu.nyu.adb;
+
 import java.util.HashSet;
 import java.util.Date;
 
@@ -35,9 +37,7 @@ public class Site {
   }
 
   public void addVersion(Variable variable, int newValue) {
-    Date currentTime = new Date();
-    variable.getVersions.put(currentTime, newValue);
-    variable.setLastCommitTime(currentTime);
+    variable.setValue(newValue);
   }
 
 
