@@ -1,7 +1,7 @@
 import java.util.HashSet;
 import java.util.Date;
 
-public class SiteManager {
+public class Site {
 
   private boolean siteStatus;
   private int siteIndex;
@@ -40,5 +40,5 @@ public class SiteManager {
     variable.setLastCommitTime(currentTime);
   }
 
-  
+
 }
