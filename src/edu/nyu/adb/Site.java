@@ -36,7 +36,7 @@ public class Site {
     this.siteIndex = siteIndex;
   }
 
-  public void addVersion(Variable variable, int newValue) {
+  public void setVarValue(Variable variable, int newValue) {
     variable.setValue(newValue);
   }
 
