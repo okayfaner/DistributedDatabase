@@ -58,4 +58,9 @@ public class Variable {
     this.lastCommitTime = t;
   }
 
+
+  public TreeMap<Date, Integer> getVersions() {
+    TreeMap<Date, Integer> temp = this.versions;
+    return temp;
+  }
 }
