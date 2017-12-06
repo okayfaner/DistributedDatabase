@@ -126,34 +126,21 @@ public class TransactionManager {
         System.out.println();
         System.out.println("Failliing site " + siteId);
         Site site = siteIdToSite.get(siteId);
-        List<Integer> transactionIdsOnTheSite = site.getTransactions();
-        for (int transactionId : transactionIdsOnTheSite) {
-            Transaction transaction = transactionIdToTransaction.get(transactionId);
-            transactionIdToTransaction.remove(transactionId);
+        List<Integer> transactionIdsOnTheSite = site.fail();
+        for (int siteIdForAbortTransaction : siteIdToSite.keySet()) {
+            Site siteForAbortTransaction = siteIdToSite.get(siteIdForAbortTransaction);
+            for (int transactionId : transactionIdsOnTheSite) {
+                if (siteForAbortTransaction.removeTransactions(transactionId)) {
+                    System.out.println("Aborting transaction " + transactionId + " at site " + siteIdForAbortTransaction)
+                }
+            }
         }
-        /*
-        for (Transaction transaction : transactionsOnTheSite) {
-            abort(transaction);
-            transactionIdToTransaction.remove(transaction.getTransactionId());
-            transaction.removeOpeartions();
-        }
-        */
-        site.fail();
+        siteIdToSite.remove(siteId);
         System.out.println("Site " + siteId + " failed");
         System.out.println();
     }
 
-    private void abort(Transaction transaction) {
-        System.out.println();
-        System.out.println("Aborting transaction " + transaction.getTransactionId());
-        transaction.removeAllOperations();
-        for (int siteId : siteIdToSite.keySet()) {
-            Site site = siteIdToSite.get(siteId);
-            site.removeTransactions();
-        }
-    }
-
-    private void recover(int siteId) {
+    private void recoverSite(int siteId) {
         System.out.println();
         System.out.println("Recovering site " + siteId);
         Site site = siteIdToSite.get(siteId);
