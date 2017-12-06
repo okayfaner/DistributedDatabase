@@ -63,7 +63,7 @@ public class Site {
   }
 
   public void dropLock(int varIndex, int tranId) {
-
+    // TODO
   }
 
   public List<Integer> getTransactions() {
@@ -71,7 +71,29 @@ public class Site {
   }
 
   public void removeTransactions(int transId) {
-    transTable.remove(transId);
+    if (transTable.containsKey(transId)) {
+      transTable.remove(transId);
+    }
+  }
+
+  public List<Integer> fail() {
+    this.siteStatus = SiteStatus.FAIL;
+
+    // drop all locks in this site.
+    for (int i = 1; i <= 20; i++) {
+      if (i % 2 == 0 || siteIndex == 1 + i % 10) {
+        lockTable.put(i, new ArrayList<>());
+      }
+    }
+
+    List<Integer> listTrans = new ArrayList<>(this.transTable.keySet());
+    // drop all trans in this site.
+    this.transTable = new HashMap<>();
+    return listTrans;
+  }
+
+  public void recover() {
+    this.siteStatus = SiteStatus.RECOVERY;
   }
 
   // dump site
