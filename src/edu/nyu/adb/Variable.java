@@ -58,9 +58,23 @@ public class Variable {
     this.lastCommitTime = t;
   }
 
+  public int getVersionValue (Date t) {
+    return versions.lowerEntry(t).getValue();
+  }
 
   public TreeMap<Date, Integer> getVersions() {
     TreeMap<Date, Integer> temp = this.versions;
     return temp;
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int hash = 1;
+    hash = prime * hash + index;
+    hash = prime * hash + value;
+    hash = prime * hash + lastCommitTime.hashCode();
+    hash = prime * hash + (accessibleForRead ? 0 : 1);
+    return hash;
   }
 }

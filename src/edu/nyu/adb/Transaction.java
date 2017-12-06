@@ -1,6 +1,7 @@
 package edu.nyu.adb;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class Transaction {
@@ -10,11 +11,11 @@ public class Transaction {
     }
 
     private int transactionId;
-    private int timeStamp;
+    private Date timeStamp;
     private TranType tranType;
     private List<Operation> operations;
 
-    public Transaction(int transactionId, int timeStamp, TranType tranType) {
+    public Transaction(int transactionId, Date timeStamp, TranType tranType) {
         this.transactionId = transactionId;
         this.timeStamp = timeStamp;
         this.tranType = tranType;
@@ -25,12 +26,20 @@ public class Transaction {
         return this.transactionId;
     }
 
-    public int getTimeStamp() {
+    public Date getTimeStamp() {
         return this.timeStamp;
     }
 
     public TranType getType() {
         return this.tranType;
+    }
+
+    public void addOperations(Operation operation) {
+      this.operations.add(operation);
+    }
+
+    public void removeAllOperations() {
+      this.operations = new ArrayList<>();
     }
 
     @Override
