@@ -131,7 +131,7 @@ public class TransactionManager {
             Site siteForAbortTransaction = siteIdToSite.get(siteIdForAbortTransaction);
             for (int transactionId : transactionIdsOnTheSite) {
                 if (siteForAbortTransaction.removeTransactions(transactionId)) {
-                    System.out.println("Aborting transaction " + transactionId + " at site " + siteIdForAbortTransaction)
+                    System.out.println("Aborting transaction " + transactionId + " at site " + siteIdForAbortTransaction);
                 }
             }
         }
