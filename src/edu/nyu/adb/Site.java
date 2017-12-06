@@ -70,10 +70,13 @@ public class Site {
     return new ArrayList<>(transTable.keySet());
   }
 
-  public void removeTransactions(int transId) {
+  public boolean removeTransactions(int transId) {
     if (transTable.containsKey(transId)) {
       transTable.remove(transId);
+      return true;
     }
+
+    return false;
   }
 
   public List<Integer> fail() {
