@@ -4,28 +4,33 @@ import java.util.Date;
 
 public class Operation {
 
-  private String type;
+  public enum OpType {
+    read,
+    write
+  }
+
+  private OpType opType;
   private int variableIndex;
   private int value = 0;
   private Date timestamp;
 
   // For read operation
-  public Operation(String type, int variableIndex, Date timestamp) {
-    this.type = type;
+  public Operation(OpType type, int variableIndex, Date timestamp) {
+    this.opType = type;
     this.variableIndex = variableIndex;
     this.timestamp = timestamp;
   }
 
   // For write operation
-  public Operation(String type, int variableIndex, int value, Date timestamp) {
-    this.type = type;
+  public Operation(OpType type, int variableIndex, int value, Date timestamp) {
+    this.opType = type;
     this.variableIndex = variableIndex;
     this.value = value;
     this.timestamp = timestamp;
   }
 
-  public String getType() {
-    return type;
+  public OpType getType() {
+    return this.opType;
   }
 
   public int getVariableIndex() {
@@ -44,7 +49,7 @@ public class Operation {
   public int hashCode() {
     int key = 31;
     int res = 1;
-    res = key * res + ((this.type == null) ? 0 : this.type.hashCode());
+    res = key * res + ((this.opType == null) ? 0 : this.opType.hashCode());
     res = key * res + variableIndex;
     res = key * res + value;
     res = key * res + ((this.timestamp == null) ? 0 : this.timestamp.hashCode());
@@ -60,7 +65,7 @@ public class Operation {
       return true;
     }
     Operation other = (Operation) obj;
-    if (this.type == null || other.type == null || !this.type.equals(other.type)) {
+    if (this.opType == null || other.opType == null || !this.opType.equals(other.opType)) {
       return false;
     }
     if (this.variableIndex != other.variableIndex) {

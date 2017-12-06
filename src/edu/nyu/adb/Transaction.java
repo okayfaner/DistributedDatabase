@@ -1,5 +1,6 @@
 package edu.nyu.adb;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Transaction {
@@ -17,6 +18,7 @@ public class Transaction {
         this.transactionId = transactionId;
         this.timeStamp = timeStamp;
         this.tranType = tranType;
+        this.operations = new ArrayList<>();
     }
 
     public int getTransactionId() {
