@@ -63,6 +63,10 @@ public class Site {
     lockTable.put(varIndex, temp);
   }
 
+  public List<Lock> getLockTable(int varIndex) {
+    return lockTable.get(varIndex);
+  }
+
   public void dropLock(int varIndex, int tranId) {
     // TODO
   }
@@ -145,6 +149,32 @@ public class Site {
             Variable variable = variableTable.get(varIndex);
             System.out.println("Variable x" + variable.getIndex() +
                     " from T" + trans.getTransactionId() + " has value " + variable.getVersionValue(operation.getTimestamp()));
+
+            return true;
+          }
+
+          return false;
+        }
+      }
+    } else {
+      if (operation.getType() == Operation.OpType.read) {
+        int varIndex = operation.getVariableIndex();
+        if ((varIndex % 2) == 1){
+          if (siteStatus == SiteStatus.FAIL) {
+            // means can't read
+            return false;
+          }
+
+          Variable variable = variableTable.get(varIndex);
+          System.out.println("Variable x" + variable.getIndex() +
+                  " from T" + trans.getTransactionId() + " has value " + variable.getValue());
+
+          return true;
+        } else {
+          if (siteStatus == SiteStatus.NORMAL) {
+            Variable variable = variableTable.get(varIndex);
+            System.out.println("Variable x" + variable.getIndex() +
+                    " from T" + trans.getTransactionId() + " has value " + variable.getValue());
 
             return true;
           }
