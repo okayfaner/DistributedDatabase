@@ -32,6 +32,15 @@ public class Graph {
     return null;
   }
 
+  public List<Integer> getNeighbors(int vertexId) {
+    Vertex vertex = getVertex(vertexId);
+    List<Integer> result = new ArrayList<>();
+    for (Vertex temp : vertex.getNeighbors()) {
+      result.add(temp.getVertexId());
+    }
+    return result;
+  }
+
   // remove vertex
   public void removeVertex(int vertexId) {
     for (Vertex vertex : graph) {
