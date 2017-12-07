@@ -10,23 +10,30 @@ public class Operation {
   }
 
   private OpType opType;
+  private int transId;
   private int variableIndex;
   private int value = 0;
   private Date timestamp;
 
   // For read operation
-  public Operation(OpType type, int variableIndex, Date timestamp) {
+  public Operation(OpType type, int variableIndex, Date timestamp, int transId) {
     this.opType = type;
     this.variableIndex = variableIndex;
     this.timestamp = timestamp;
+    this.transId = transId;
   }
 
   // For write operation
-  public Operation(OpType type, int variableIndex, int value, Date timestamp) {
+  public Operation(OpType type, int variableIndex, int value, Date timestamp, int transId) {
     this.opType = type;
     this.variableIndex = variableIndex;
     this.value = value;
     this.timestamp = timestamp;
+    this.transId = transId;
+  }
+
+  public int getTransId() {
+    return this.transId;
   }
 
   public OpType getType() {
