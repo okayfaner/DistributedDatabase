@@ -44,7 +44,6 @@ public class Site {
     return this.siteIndex;
   }
 
-
   public void setVarValue(Variable variable, int newValue) {
       variable.setValue(newValue);
   }
@@ -57,7 +56,8 @@ public class Site {
     return variableTable.get(index).getVersionValue(date);
   }
 
-  public void addLock(int varIndex, Lock lock) {
+  // true add successfully, false not
+  public boolean addLock(int varIndex, Lock lock) {
     List<Lock> temp = lockTable.get(varIndex);
     temp.add(lock);
     lockTable.put(varIndex, temp);
@@ -69,6 +69,7 @@ public class Site {
 
   public void dropLock(int varIndex, int tranId) {
     // TODO
+
   }
 
   public List<Integer> getTransactions() {
@@ -128,6 +129,9 @@ public class Site {
 
   // return commit success or not.
   public boolean commit(Operation operation, Transaction trans) {
+
+
+
     if (trans.getType() == Transaction.TranType.RO) {
       if (operation.getType() == Operation.OpType.read) {
         int varIndex = operation.getVariableIndex();
