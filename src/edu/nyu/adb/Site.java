@@ -58,9 +58,47 @@ public class Site {
 
   // true add successfully, false not
   public boolean addLock(int varIndex, Lock lock) {
-    List<Lock> temp = lockTable.get(varIndex);
-    temp.add(lock);
-    lockTable.put(varIndex, temp);
+
+    List<Lock> locksOnVar = lockTable.get(varIndex);
+    if(lock.getType() == Lock.lockType.READ) {
+      if (locksOnVar.size() == 0) {
+        locksOnVar.add(lock);
+        lockTable.put(varIndex, locksOnVar);
+        return true;
+      } else {
+        boolean flag = false;
+        for (Lock temp : locksOnVar) {
+          if (temp.getType() == Lock.lockType.WRITE) {
+            flag = true;
+            break;
+          }
+        }
+        if (flag) {
+          return false;
+        } else {
+          locksOnVar.add(lock);
+          lockTable.put(varIndex, locksOnVar);
+          return true;
+        }
+      }
+    } else {
+      if (locksOnVar.size() > 1) {
+        return false;
+      } else if (locksOnVar.size() == 1) {
+        if (locksOnVar.get(0).getTranscId() == lock.getTranscId()) {
+          locksOnVar.remove(0);
+          locksOnVar.add(lock);
+          lockTable.put(varIndex, locksOnVar);
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        locksOnVar.add(lock);
+        lockTable.put(varIndex, locksOnVar);
+        return true;
+      }
+    }
   }
 
   public List<Lock> getLockTable(int varIndex) {
@@ -69,7 +107,16 @@ public class Site {
 
   public void dropLock(int varIndex, int tranId) {
     // TODO
+    List<Lock> lockList = lockTable.get(varIndex);
 
+    for (int i = 0; i < lockList.size(); i ++) {
+      if (lockList.get(i).getTranscId() == tranId) {
+        lockList.remove(i);
+        break;
+      }
+    }
+
+    lockTable.put(varIndex, lockList);
   }
 
   public List<Integer> getTransactions() {
@@ -130,12 +177,11 @@ public class Site {
   // return commit success or not.
   public boolean commit(Operation operation, Transaction trans) {
 
-
+    // check lock first.
+    int varIndex = operation.getVariableIndex();
 
     if (trans.getType() == Transaction.TranType.RO) {
       if (operation.getType() == Operation.OpType.read) {
-        int varIndex = operation.getVariableIndex();
-
         // unreplic var
         if ((varIndex % 2) == 1){
           if (siteStatus == SiteStatus.FAIL) {
@@ -161,8 +207,23 @@ public class Site {
         }
       }
     } else {
+      List<Lock> lockList = lockTable.get(varIndex);
       if (operation.getType() == Operation.OpType.read) {
-        int varIndex = operation.getVariableIndex();
+        // check lock first
+
+        boolean flag = false;
+
+        for (Lock temp : lockList) {
+          if (temp.getType() == Lock.lockType.WRITE && temp.getTranscId() != trans.getTransactionId()) {
+            flag = true;
+            break;
+          }
+        }
+
+        if (flag) {
+          return false;
+        }
+
         if ((varIndex % 2) == 1){
           if (siteStatus == SiteStatus.FAIL) {
             // means can't read
@@ -172,22 +233,58 @@ public class Site {
           Variable variable = variableTable.get(varIndex);
           System.out.println("Variable x" + variable.getIndex() +
                   " from T" + trans.getTransactionId() + " has value " + variable.getValue());
-
+          //dropLock(varIndex, trans.getTransactionId());
           return true;
         } else {
           if (siteStatus == SiteStatus.NORMAL) {
             Variable variable = variableTable.get(varIndex);
             System.out.println("Variable x" + variable.getIndex() +
                     " from T" + trans.getTransactionId() + " has value " + variable.getValue());
-
+            //dropLock(varIndex, trans.getTransactionId());
             return true;
           }
 
           return false;
         }
+      } else {
+        // write
+        boolean flag = false;
+
+        for (Lock temp : lockList) {
+          if (temp.getTranscId() != trans.getTransactionId()) {
+            flag = true;
+            break;
+          }
+        }
+
+        if (flag) {
+          return false;
+        }
+
+        if (siteStatus == SiteStatus.FAIL) {
+          return false;
+        } else if (siteStatus == SiteStatus.RECOVERY) {
+          Variable var = variableTable.get(varIndex);
+          var.setValue(operation.getValue());
+          this.siteStatus = SiteStatus.NORMAL;
+          System.out.println("Variable x" + var.getIndex() +
+                  " from T" + trans.getTransactionId() + " write value " + var.getValue());
+          System.out.println("Site " + this.siteIndex + " become NORMAL due to writing");
+          variableTable.put(varIndex, var);
+          //dropLock(varIndex, trans.getTransactionId());
+          return true;
+        } else {
+          Variable var = variableTable.get(varIndex);
+          var.setValue(operation.getValue());
+          System.out.println("Variable x" + var.getIndex() +
+                  " from T" + trans.getTransactionId() + " write value " + var.getValue());
+          variableTable.put(varIndex, var);
+          //dropLock(varIndex, trans.getTransactionId());
+          return true;
+        }
       }
     }
 
-    return true;
+    return false;
   }
 }
