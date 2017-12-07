@@ -12,18 +12,24 @@ public class Graph {
     graph = new ArrayList<>();
   }
 
-  public void addVertex(Vertex vertex) {
-    graph.add(vertex);
+  public void addVertex(int vertexId) {
+    graph.add(new Vertex(vertexId));
   }
 
   // v2 wait for v1, so get 2 -> 1
-  public void addNeighbor(int vertexId, Vertex v2) {
+  public void addNeighbor(int vertexId, int neighborId) {
+    Vertex vertex = getVertex(vertexId);
+    Vertex neighbor = getVertex(neighborId);
+    vertex.addNeighbor(neighbor);
+  }
+
+  private Vertex getVertex(int vertexId) {
     for (Vertex vertex : graph) {
       if (vertex.getVertexId() == vertexId) {
-        vertex.addNeighbor(v2);
-        break;
+        return vertex;
       }
     }
+    return null;
   }
 
   // remove vertex
@@ -66,7 +72,7 @@ public class Graph {
 
   }
 
-  public boolean dfs(int i, List<Vertex> graph, int[] visited, Set<Integer> result) {
+  private boolean dfs(int i, List<Vertex> graph, int[] visited, Set<Integer> result) {
     if (visited[i] == 1) {
       result.add(i);
       return true;
