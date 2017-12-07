@@ -1,0 +1,7 @@
+beginRO(T1)
+beginRO(T2)
+R(T1,x3)
+R(T2,x3)
+R(T2,x4)
+end(T2)
+end(T1)

@@ -68,9 +68,9 @@ public class TransactionManager {
       startTransaction("RW", Integer.parseInt(transactionId));
     }
     else if (command.startsWith("end")) {
-      String transactionId = command.substring(command.indexOf("T") + 1, command.indexOf(")"));
+      int transactionId = Integer.valueOf(command.substring(command.indexOf("T") + 1, command.indexOf(")")));
       if (transactionIdToTransaction.containsKey(transactionId)) {
-        endTransaction(Integer.parseInt(transactionId));
+        endTransaction(transactionId);
       }
     }
     else if (command.startsWith("fail")) {
@@ -91,11 +91,11 @@ public class TransactionManager {
       }
     }
     else if (command.startsWith("R")) {
-      String transactionId = command.substring(command.indexOf("T") + 1, command.indexOf(","));
+      int transactionId = Integer.parseInt(command.substring(command.indexOf("T") + 1, command.indexOf(",")));
       String variableId = command.substring(command.indexOf("x") + 1, command.indexOf(")"));
       if (transactionIdToTransaction.containsKey(transactionId)) {
-        addSiteIdToTransactionMap(Integer.parseInt(transactionId), Integer.parseInt(variableId));
-        readOperation(Integer.parseInt(transactionId), Integer.parseInt(variableId));
+        addSiteIdToTransactionMap(transactionId, Integer.parseInt(variableId));
+        readOperation(transactionId, Integer.parseInt(variableId));
       }
     }
     else if (command.startsWith("W")) {
@@ -145,7 +145,7 @@ public class TransactionManager {
       for (Operation operation : operationList) {
         int variableId = operation.getVariableIndex();
         if (variableId % 2 == 1) {
-          Site site = siteIdToSite.get(variableId % 2 + 1);
+          Site site = siteIdToSite.get(variableId % 10 + 1);
           if (site.commit(operation, transaction)) {
             continue;
           }
@@ -240,12 +240,17 @@ public class TransactionManager {
         Site site = siteIdToSite.get(variableId % 10 + 1);
         Operation operation = new Operation(Operation.OpType.read, variableId, operationTimestamp);
         site.addOperation(transactionId, operation);
+        Operation operation1 = new Operation(Operation.OpType.read, variableId, operationTimestamp);
+        transactionIdToTransaction.get(transactionId).addOperations(operation1);
       } else {
         List<Integer> siteIds = variableIdToSiteId.get(variableId);
+        Operation operation1 = new Operation(Operation.OpType.read, variableId, operationTimestamp);
+        transactionIdToTransaction.get(transactionId).addOperations(operation1);
         for (int siteId : siteIds) {
           Site site = siteIdToSite.get(siteId);
           Operation operation = new Operation(Operation.OpType.read, variableId, operationTimestamp);
           site.addOperation(transactionId, operation);
+
         }
       }
     } else {
