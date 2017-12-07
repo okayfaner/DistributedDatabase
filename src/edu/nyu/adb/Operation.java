@@ -41,8 +41,16 @@ public class Operation {
     return value;
   }
 
+  public void setValue(int value) {
+    this.value = value;
+  }
+
   public Date getTimestamp() {
     return timestamp;
+  }
+
+  public void setTimestamp(Date date) {
+    this.timestamp = date;
   }
 
   @Override

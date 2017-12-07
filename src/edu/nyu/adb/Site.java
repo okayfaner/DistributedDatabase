@@ -2,6 +2,7 @@ package edu.nyu.adb;
 
 import java.util.*;
 
+
 public class Site {
 
   public enum SiteStatus {
@@ -79,6 +80,12 @@ public class Site {
     return false;
   }
 
+  public void addOperation(int transId, Operation operation) {
+    Queue<Operation> queue = transTable.getOrDefault(transId, new LinkedList<Operation>());
+    queue.offer(operation);
+    transTable.put(transId, queue);
+  }
+
   public List<Integer> fail() {
     this.siteStatus = SiteStatus.FAIL;
 
@@ -115,4 +122,38 @@ public class Site {
     System.out.println("Variable X" + temp.getIndex() + " : " + temp.getValue());
   }
 
+  // return commit success or not.
+  public boolean commit(Operation operation, Transaction trans) {
+    if (trans.getType() == Transaction.TranType.RO) {
+      if (operation.getType() == Operation.OpType.read) {
+        int varIndex = operation.getVariableIndex();
+
+        // unreplic var
+        if ((varIndex % 2) == 1){
+          if (siteStatus == SiteStatus.FAIL) {
+            // means can't read
+            return false;
+          }
+
+          Variable variable = variableTable.get(varIndex);
+          System.out.println("Variable x" + variable.getIndex() +
+                  " from T" + trans.getTransactionId() + " has value " + variable.getVersionValue(operation.getTimestamp()));
+
+          return true;
+        } else {
+          if (siteStatus == SiteStatus.NORMAL) {
+            Variable variable = variableTable.get(varIndex);
+            System.out.println("Variable x" + variable.getIndex() +
+                    " from T" + trans.getTransactionId() + " has value " + variable.getVersionValue(operation.getTimestamp()));
+
+            return true;
+          }
+
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
 }
