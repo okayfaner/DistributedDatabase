@@ -12,11 +12,15 @@ public class Site {
   }
 
   private SiteStatus siteStatus;
-  private int siteIndex;
-  private Map<Integer, Variable> variableTable;//varId,
-  private Map<Integer, List<Lock>> lockTable;//varId
-  private Map<Integer, Queue<Operation>> transTable; //tansId,
+  private int siteIndex;// id for site.
+  private Map<Integer, Variable> variableTable;// <varId, variable>
+  private Map<Integer, List<Lock>> lockTable;// <varId, list of locks>
+  private Map<Integer, Queue<Operation>> transTable; // <transaction Id, queue for not commited operation in this site>
 
+  /**
+   * constructor for site. it will initialize all the tables in this site and give the variable its initial value.
+   * @param siteIndex the id for this site.
+   */
   public Site(int siteIndex) {
     this.siteStatus = SiteStatus.NORMAL;
     this.siteIndex = siteIndex;
@@ -32,31 +36,21 @@ public class Site {
     }
   }
 
+  /**
+   * return site status.
+   * @return
+   */
   public SiteStatus getSiteStatus() {
     return this.siteStatus;
   }
 
-  public void setSiteStatus(SiteStatus siteStatus) {
-    this.siteStatus = siteStatus;
-  }
-
-  public int getSiteIndex() {
-    return this.siteIndex;
-  }
-
-  public void setVarValue(Variable variable, int newValue) {
-      variable.setValue(newValue);
-  }
-
-  public int getCurVarValue(int index) {
-    return variableTable.get(index).getValue();
-  }
-
-  public int getVerVarValue(int index, long date) {
-    return variableTable.get(index).getVersionValue(date);
-  }
-
-  // true add successfully, false not
+  /**
+   * try to add lock for this variable with this given lock.
+   * @param varIndex
+   * @param lock lock you want to add on this variable in this site.
+   * @return true, if added this lock on this variable.
+   *         false, if can't add lock.
+   */
   public boolean addLock(int varIndex, Lock lock) {
 
     if (siteStatus == SiteStatus.FAIL) {
@@ -109,10 +103,20 @@ public class Site {
     }
   }
 
+  /**
+   * return the current lock table on given variable.
+   * @param varIndex id for variable
+   * @return the current lock table on given variable.
+   */
   public List<Lock> getLockTable(int varIndex) {
     return lockTable.get(varIndex);
   }
 
+  /**
+   * drop the lock, which give transaction held on this variable.
+   * @param varIndex id for variable.
+   * @param tranId id for transaction
+   */
   public void dropLock(int varIndex, int tranId) {
     List<Lock> lockList = lockTable.get(varIndex);
 
@@ -126,10 +130,12 @@ public class Site {
     lockTable.put(varIndex, lockList);
   }
 
-  public List<Integer> getTransactions() {
-    return new ArrayList<>(transTable.keySet());
-  }
-
+  /**
+   * remove the transaction in this transTable in this site
+   * and remove all locks this transaction held in this site.
+   * @param transId
+   * @return remove it or not.
+   */
   public boolean removeTransactions(int transId) {
     if (transTable.containsKey(transId)) {
       transTable.remove(transId);
@@ -156,12 +162,21 @@ public class Site {
     return false;
   }
 
+  /**
+   * add this operation in related transaction
+   * @param transId
+   * @param operation
+   */
   public void addOperation(int transId, Operation operation) {
     Queue<Operation> queue = transTable.getOrDefault(transId, new LinkedList<Operation>());
     queue.offer(operation);
     transTable.put(transId, queue);
   }
 
+  /**
+   * fail this site and drop all the lock table and mark its status to fail.
+   * @return
+   */
   public List<Integer> fail() {
     this.siteStatus = SiteStatus.FAIL;
 
@@ -178,11 +193,16 @@ public class Site {
     return listTrans;
   }
 
+  /**
+   * revor this site and mark its status to recovery.
+   */
   public void recover() {
     this.siteStatus = SiteStatus.RECOVERY;
   }
 
-  // dump site
+  /**
+   * dump this site, it will print all variable Id and its last commited value(lates value).
+   */
   public void dump() {
     for (int i = 1; i <= 20; i++) {
       if (i % 2 == 0 || siteIndex == 1 + i % 10) {
@@ -192,13 +212,27 @@ public class Site {
     }
   }
 
-  // dump variable
+  /**
+   * dump this variable, it will print this variable's id and last commited value.
+   * @param index
+   */
   public void dump(int index) {
     Variable temp = variableTable.get(index);
     System.out.println("Variable x" + temp.getIndex() + " : " + temp.getValue());
   }
 
-  // return commit success or not.
+  /**
+   * try to commit given operation in this transaction.
+   * First, this method will check transaction type is RO or RW,
+   * in RO, just need to check the status of this site, which determine success or not.
+   * in RW, it will check the lock status for this operation, if this transaction have the needed lock on this site for
+   * this varaible, and the site status is right, then this operation can be commited.
+   * or this operation can not be commited.
+   * @param operation
+   * @param trans
+   * @return true, this operation commited;
+   *         false, this operation can not be commited.
+   */
   public boolean commit(Operation operation, Transaction trans) {
 
     // check lock first.

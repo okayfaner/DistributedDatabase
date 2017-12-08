@@ -9,7 +9,7 @@ public class Variable {
   private long lastCommitTime;
 
   /**
-   *
+   * constructor for Variable
    * @param index index for the variable.
    * @param value last commit value for this variable.
    */
@@ -21,10 +21,18 @@ public class Variable {
     versions.put(this.lastCommitTime, this.value);
   }
 
+  /**
+   * return its last commited value (latest value)
+   * @return
+   */
   public int getValue() {
     return this.value;
   }
 
+  /**
+   * set its value and add to its version map.
+   * @param value
+   */
   public void setValue(int value) {
     long temp = System.nanoTime();
     this.setLastCommitTime(temp);
@@ -32,22 +40,27 @@ public class Variable {
     this.value = value;
   }
 
+  /**
+   * return index of this variable.
+   * @return
+   */
   public int getIndex() {
     return this.index;
   }
 
-  public void setIndex(int index) {
-    this.index = index;
-  }
-
-  public long getLastCommitTime() {
-    return this.lastCommitTime;
-  }
-
+  /**
+   * set last commit time.
+   * @param t
+   */
   public void setLastCommitTime(long t) {
     this.lastCommitTime = t;
   }
 
+  /**
+   * return the latest commited value before the give time.
+   * @param t nano time for time stamp
+   * @return
+   */
   public int getVersionValue (long t) {
     return versions.lowerEntry(t).getValue();
   }
