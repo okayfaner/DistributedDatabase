@@ -13,10 +13,10 @@ public class Operation {
   private int transId;
   private int variableIndex;
   private int value = 0;
-  private Date timestamp;
+  private long timestamp;
 
   // For read operation
-  public Operation(OpType type, int variableIndex, Date timestamp, int transId) {
+  public Operation(OpType type, int variableIndex, long timestamp, int transId) {
     this.opType = type;
     this.variableIndex = variableIndex;
     this.timestamp = timestamp;
@@ -24,7 +24,7 @@ public class Operation {
   }
 
   // For write operation
-  public Operation(OpType type, int variableIndex, int value, Date timestamp, int transId) {
+  public Operation(OpType type, int variableIndex, int value, long timestamp, int transId) {
     this.opType = type;
     this.variableIndex = variableIndex;
     this.value = value;
@@ -52,11 +52,11 @@ public class Operation {
     this.value = value;
   }
 
-  public Date getTimestamp() {
+  public long getTimestamp() {
     return timestamp;
   }
 
-  public void setTimestamp(Date date) {
+  public void setTimestamp(long date) {
     this.timestamp = date;
   }
 
@@ -67,7 +67,6 @@ public class Operation {
     res = key * res + ((this.opType == null) ? 0 : this.opType.hashCode());
     res = key * res + variableIndex;
     res = key * res + value;
-    res = key * res + ((this.timestamp == null) ? 0 : this.timestamp.hashCode());
     return res;
   }
 
@@ -89,7 +88,7 @@ public class Operation {
     if (this.value != other.value) {
       return false;
     }
-    if (this.timestamp == null || other.timestamp == null || this.timestamp.equals(other.timestamp)) {
+    if (this.timestamp == other.timestamp) {
       return false;
     }
     return true;

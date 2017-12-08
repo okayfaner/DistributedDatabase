@@ -5,8 +5,8 @@ import java.util.*;
 public class Variable {
   private int index;
   private int value;
-  private TreeMap<Date, Integer> versions;
-  private Date lastCommitTime;
+  private TreeMap<Long, Integer> versions;
+  private long lastCommitTime;
   private boolean accessibleForRead;
 
   /**
@@ -18,7 +18,7 @@ public class Variable {
     this.index = index;
     this.value = value;
     this.accessibleForRead = true;
-    this.lastCommitTime = new Date();
+    this.lastCommitTime = System.nanoTime();
     this.versions = new TreeMap<>();
     versions.put(this.lastCommitTime, this.value);
   }
@@ -28,7 +28,7 @@ public class Variable {
   }
 
   public void setValue(int value) {
-    Date temp = new Date();
+    long temp = System.nanoTime();
     this.setLastCommitTime(temp);
     versions.put(temp, value);
     this.value = value;
@@ -50,20 +50,20 @@ public class Variable {
     this.accessibleForRead = t;
   }
 
-  public Date getLastCommitTime() {
+  public long getLastCommitTime() {
     return this.lastCommitTime;
   }
 
-  public void setLastCommitTime(Date t) {
+  public void setLastCommitTime(long t) {
     this.lastCommitTime = t;
   }
 
-  public int getVersionValue (Date t) {
+  public int getVersionValue (long t) {
     return versions.lowerEntry(t).getValue();
   }
 
-  public TreeMap<Date, Integer> getVersions() {
-    TreeMap<Date, Integer> temp = this.versions;
+  public TreeMap<Long, Integer> getVersions() {
+    TreeMap<Long, Integer> temp = this.versions;
     return temp;
   }
 
@@ -73,7 +73,7 @@ public class Variable {
     int hash = 1;
     hash = prime * hash + index;
     hash = prime * hash + value;
-    hash = prime * hash + lastCommitTime.hashCode();
+    hash = prime * hash + (int)(lastCommitTime ^ lastCommitTime >>> 32);
     hash = prime * hash + (accessibleForRead ? 0 : 1);
     return hash;
   }

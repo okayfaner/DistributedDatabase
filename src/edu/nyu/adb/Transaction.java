@@ -11,11 +11,11 @@ public class Transaction {
   }
 
   private int transactionId;
-  private Date timeStamp;
+  private long timeStamp;
   private TranType tranType;
   private List<Operation> operations;
 
-  public Transaction(int transactionId, Date timeStamp, TranType tranType) {
+  public Transaction(int transactionId, long timeStamp, TranType tranType) {
       this.transactionId = transactionId;
       this.timeStamp = timeStamp;
       this.tranType = tranType;
@@ -26,7 +26,7 @@ public class Transaction {
       return this.transactionId;
   }
 
-  public Date getTimeStamp() {
+  public long getTimeStamp() {
       return this.timeStamp;
   }
 

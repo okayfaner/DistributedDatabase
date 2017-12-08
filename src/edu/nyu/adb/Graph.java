@@ -46,11 +46,14 @@ public class Graph {
 
   // remove vertex
   public void removeVertex(int vertexId) {
-    for (Vertex vertex : graph) {
-      if (vertex.getVertexId() == vertexId) {
-        graph.remove(vertex);
+    int i;
+    for (i = 0; i < graph.size(); i ++) {
+      if (graph.get(i).getVertexId() == vertexId) {
+        break;
       }
     }
+
+    graph.remove(i);
 
     for (Vertex vertex : graph) {
       vertex.removeNeighbor(vertexId);

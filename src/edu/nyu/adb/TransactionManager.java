@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class TransactionManager {
 
@@ -35,7 +36,7 @@ public class TransactionManager {
     transactionIdToTransaction = new HashMap<>();
     transactionIdToTransaction = new HashMap<>();
     transactionIdToSites = new HashMap<>();
-    waitlistOperation = new ArrayList<>();
+    waitlistOperation = new CopyOnWriteArrayList<>();
     graph = new Graph();
     try {
       file = new File(inputFilePath);
@@ -105,7 +106,7 @@ public class TransactionManager {
       String transactionId = parameters[0].substring(1);
       String variableId = parameters[1].substring(1);
       String newValue = parameters[2];
-      if (transactionIdToTransaction.containsKey(transactionId)) {
+      if (transactionIdToTransaction.containsKey(Integer.parseInt(transactionId))) {
         addSiteIdToTransactionMap(Integer.parseInt(transactionId), Integer.parseInt(variableId));
         writeOperation(Integer.parseInt(transactionId), Integer.parseInt(variableId), Integer.parseInt(newValue));
       }
@@ -132,11 +133,12 @@ public class TransactionManager {
     System.out.println();
     System.out.println("Starting transaction " + transactionId);
     if (type.equals("RW")) {
-      transactionIdToTransaction.put(transactionId, new Transaction(transactionId, new Date(), Transaction.TranType.RW));
+      transactionIdToTransaction.put(transactionId, new Transaction(transactionId, System.nanoTime(), Transaction.TranType.RW));
       graph.addVertex(transactionId);
     }
     else {
-      transactionIdToTransaction.put(transactionId, new Transaction(transactionId, new Date(), Transaction.TranType.RO));
+      transactionIdToTransaction.put(transactionId, new Transaction(transactionId, System.nanoTime(), Transaction.TranType.RO));
+      //graph.addVertex(transactionId);
     }
     System.out.println();
   }
@@ -159,19 +161,31 @@ public class TransactionManager {
     if (index == -1) {
       Transaction transaction = transactionIdToTransaction.get(transactionId);
       List<Operation> operationList = transaction.getOperations();
+      transaction.removeAllOperations();
 
       // iterate through the whole operation list of the transaction to commit all operations
       for (Operation operation : operationList) {
         if (!runOperation(operation)) {
-          waitlistOperation.add(operation);
-          flagForRemoveVertex = false;
-          break; // Actually, do not need to break; since the blocked one can only be the last one in the transaction
+//          waitlistOperation.add(operation);
+//          flagForRemoveVertex = false;
+//          break; // Actually, do not need to break; since the blocked one can only be the last one in the transaction
         }
       }
     }
     // if the transaction we want to end exists in waiting list, we try to end it.
     // If succeed, remove it from waitlist, try end every transaction being blocked by it, else keep it in waitlist.
     else {
+      Transaction transaction = transactionIdToTransaction.get(transactionId);
+      List<Operation> operationList = transaction.getOperations();
+      transaction.removeAllOperations();
+      for (Operation operation : operationList) {
+        if (!runOperation(operation)) {
+//          waitlistOperation.add(operation);
+//          flagForRemoveVertex = false;
+//          break; // Actually, do not need to break; since the blocked one can only be the last one in the transaction
+        }
+      }
+
       Operation operation = waitlistOperation.get(index);
       if (!runOperation(operation)) {
         flagForRemoveVertex = false;
@@ -180,7 +194,7 @@ public class TransactionManager {
         waitlistOperation.remove(index);
       }
     }
-    if (flagForRemoveVertex) {
+    if (flagForRemoveVertex && transactionIdToTransaction.get(transactionId).getType() == Transaction.TranType.RW) {
       graph.removeVertex(transactionId);
       transactionIdToTransaction.remove(transactionId);
       runWaitList();
@@ -199,13 +213,16 @@ public class TransactionManager {
         return false;
       }
     } else {
+      boolean flag = true;
       for (int i = 1; i <= 10; i++) {
         Site site = siteIdToSite.get(i);
-        if (site.commit(operation, transaction)) {
-          return true;
+        if (site.getSiteStatus() != Site.SiteStatus.FAIL && !site.commit(operation, transaction))  {
+          //return true;
+          flag = false;
+          //break;
         }
       }
-      return false;
+      return flag;
     }
   }
 
@@ -226,12 +243,13 @@ public class TransactionManager {
     System.out.println("Recovering site " + siteId);
     Site site = siteIdToSite.get(siteId);
     site.recover();
-    for (Operation waitingOperation : waitlistOperation) {
-      if (waitingOperation.getType() == Operation.OpType.read) {
-        Transaction transaction = transactionIdToTransaction.get(waitingOperation.getTransId());
-        endTransaction(transaction.getTransactionId());
-      }
-    }
+//    for (Operation waitingOperation : waitlistOperation) {
+//      if (waitingOperation.getType() == Operation.OpType.read) {
+//        Transaction transaction = transactionIdToTransaction.get(waitingOperation.getTransId());
+//        endTransaction(transaction.getTransactionId());
+//      }
+//    }
+    //runWaitList();
     System.out.println("Site " + siteId + " recovered");
     System.out.println();
   }
@@ -275,7 +293,7 @@ public class TransactionManager {
     Transaction transaction = transactionIdToTransaction.get(transactionId);
     // Add read operation of read only transaction
     if (transaction.getType() == Transaction.TranType.RO) {
-      Date operationTimestamp = transaction.getTimeStamp();
+      long operationTimestamp = transaction.getTimeStamp();
       // if odd indexed variable
       if (variableId % 2 == 1) {
         Site site = siteIdToSite.get(variableId % 10 + 1);
@@ -298,7 +316,7 @@ public class TransactionManager {
     }
     // Add read operation of read write transaction
     else {
-      Date operationTimestamp = new Date();
+      long operationTimestamp = System.nanoTime();
       // if odd indexed variable, only one site
       if (variableId % 2 == 1) {
         Site site = siteIdToSite.get(variableId % 10 + 1);
@@ -319,8 +337,8 @@ public class TransactionManager {
           deadlockDetectAndAbort();
         }
 
-        //Operation operation1 = new Operation(Operation.OpType.read, variableId, operationTimestamp, transactionId);
-        //transactionIdToTransaction.get(transactionId).addOperations(operation1);
+        Operation operation1 = new Operation(Operation.OpType.read, variableId, operationTimestamp, transactionId);
+        transactionIdToTransaction.get(transactionId).addOperations(operation1);
       }
       // if even indexed variable, multiple site
       else {
@@ -355,8 +373,8 @@ public class TransactionManager {
           deadlockDetectAndAbort();
         }
 
-        //Operation operation1 = new Operation(Operation.OpType.read, variableId, operationTimestamp, transactionId);
-        //transactionIdToTransaction.get(transactionId).addOperations(operation1);
+        Operation operation2 = new Operation(Operation.OpType.read, variableId, operationTimestamp, transactionId);
+        transactionIdToTransaction.get(transactionId).addOperations(operation2);
       }
     }
     return res;
@@ -364,13 +382,15 @@ public class TransactionManager {
 
   private boolean writeOperation(int transactionId, int variableId, int newValue) {
     boolean res = true;
-    Date operationTimestamp = new Date();
+    long operationTimestamp = System.nanoTime();
     // if odd indexed variable, only one site
     if (variableId % 2 == 1) {
       Operation operation = new Operation(Operation.OpType.write, variableId, newValue, operationTimestamp, transactionId);
       Site site = siteIdToSite.get(variableId % 10 + 1);
       if (site.addLock(variableId, new Lock(variableId, transactionId, Lock.lockType.WRITE))) {
         site.addOperation(transactionId, operation);
+        Operation operation1 = new Operation(Operation.OpType.write, variableId, newValue, operationTimestamp, transactionId);
+        transactionIdToTransaction.get(transactionId).addOperations(operation1);
       }
       else {
         waitlistOperation.add(operation);
@@ -385,17 +405,15 @@ public class TransactionManager {
         deadlockDetectAndAbort();
       }
 
-      //Operation operation1 = new Operation(Operation.OpType.write, variableId, newValue, operationTimestamp, transactionId);
-      //transactionIdToTransaction.get(transactionId).addOperations(operation1);
     }
     // if even indexed variable, multiple site
     else {
       List<Integer> siteIds = variableIdToSiteId.get(variableId);
       boolean flag = false;
-      Operation operation1 = new Operation(Operation.OpType.write, variableId, operationTimestamp, transactionId);
+      Operation operation1 = new Operation(Operation.OpType.write, variableId, newValue, operationTimestamp, transactionId);
       for (int siteId : siteIds) {
         Site site = siteIdToSite.get(siteId);
-        Operation operation = new Operation(Operation.OpType.write, variableId, operationTimestamp, transactionId);
+        Operation operation = new Operation(Operation.OpType.write, variableId, newValue, operationTimestamp, transactionId);
         if (site.getSiteStatus() == Site.SiteStatus.NORMAL) {
           if (!site.addLock(variableId, new Lock(variableId, transactionId, Lock.lockType.WRITE))) {
             break;
@@ -408,12 +426,15 @@ public class TransactionManager {
       }
       if (flag) {
         for (int siteId : siteIds) {
-          Operation operation = new Operation(Operation.OpType.write, variableId, operationTimestamp, transactionId);
+          Operation operation = new Operation(Operation.OpType.write, variableId, newValue, operationTimestamp, transactionId);
           Site site = siteIdToSite.get(siteId);
           if (site.getSiteStatus() == Site.SiteStatus.RECOVERY) {
             site.addOperation(transactionId, operation);
           }
         }
+
+        Operation operation2 = new Operation(Operation.OpType.write, variableId, newValue, operationTimestamp, transactionId);
+        transactionIdToTransaction.get(transactionId).addOperations(operation2);
       }
       if (!flag) {
         waitlistOperation.add(operation1);
@@ -435,8 +456,7 @@ public class TransactionManager {
         deadlockDetectAndAbort();
       }
 
-      //Operation operation1 = new Operation(Operation.OpType.read, variableId, operationTimestamp, transactionId);
-      //transactionIdToTransaction.get(transactionId).addOperations(operation1);
+
     }
 
     return res;
@@ -448,7 +468,7 @@ public class TransactionManager {
       Transaction transaction = transactionIdToTransaction.get(deadLockTransactionIds.get(0));
       for (int i = 1; i < deadLockTransactionIds.size(); i++) {
         Transaction transaction1 = transactionIdToTransaction.get(deadLockTransactionIds.get(i));
-        transaction = transaction.getTimeStamp().after(transaction1.getTimeStamp()) ? transaction : transaction1;
+        transaction = transaction.getTimeStamp() > (transaction1.getTimeStamp()) ? transaction : transaction1;
       }
       abort(transaction);
       deadLockTransactionIds = graph.detectDag();
@@ -480,13 +500,21 @@ public class TransactionManager {
 
   private void runWaitList() {
     for (Operation operation : waitlistOperation) {
+      int transId = operation.getTransId();
+      Transaction transaction = transactionIdToTransaction.get(transId);
+
+
       if (operation.getType() == Operation.OpType.read) {
         if (readOperation(operation.getTransId(), operation.getVariableIndex())) {
+          if (transaction.getOperations().size() != 0)
+            continue;
           endTransaction(operation.getTransId());
         }
       }
       else {
         if (writeOperation(operation.getTransId(), operation.getVariableIndex(), operation.getValue())) {
+          if (transaction.getOperations().size() != 0)
+            continue;
           endTransaction(operation.getTransId());
         }
       }

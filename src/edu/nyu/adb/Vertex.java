@@ -26,11 +26,15 @@ public class Vertex {
   }
 
   public void removeNeighbor(int vertexId) {
-    for (Vertex vertex : neighbors) {
-      if (vertex.getVertexId() == vertexId) {
-        neighbors.remove(vertex);
+    int i;
+
+    for (i = 0; i < neighbors.size(); i ++) {
+      if (neighbors.get(i).getVertexId() == vertexId) {
         break;
       }
+    }
+    if (!neighbors.isEmpty()) {
+      neighbors.remove(i);
     }
   }
 
