@@ -154,168 +154,58 @@ public class TransactionManager {
         index = i;
       }
     }
-    // if the transaction we want to end exists in waiting list, we try to end it.
-    // If succeed, remove it from waitlist, try end every transaction being blocked by it, else keep it in waitlist.
-    if (index != -1) {
-      Operation operation = waitlistOperation.get(index);
-      if (!runOperation(true, operation)) {
-        flagForRemoveVertex = false;
-      }
-      else {
-        waitlistOperation.remove(index);
-      }
-    }
     // we end all operations of the transaction. If it blocked, add it to waitlist.
     // if succeed, we try to end all the neighbors of this transanction
-    else {
+    if (index == -1) {
       Transaction transaction = transactionIdToTransaction.get(transactionId);
       List<Operation> operationList = transaction.getOperations();
 
       // iterate through the whole operation list of the transaction to commit all operations
       for (Operation operation : operationList) {
-        if (!runOperation(false, operation)) {
+        if (!runOperation(operation)) {
           waitlistOperation.add(operation);
           flagForRemoveVertex = false;
           break; // Actually, do not need to break; since the blocked one can only be the last one in the transaction
         }
       }
     }
-    if (flagForRemoveVertex) {
-      List<Integer> neighbors = graph.getNeighbors(transactionId);
-      graph.removeVertex(transactionId);
-      transactionIdToTransaction.remove(transactionId);
-      for (int neighbor : neighbors) {
-        endTransaction(neighbor);
-      }
-    }
-  }
-  /*
-  private void endTransaction(int transactionId) {
-    if (!transactionIdToTransaction.containsKey(transactionId)) {
-      graph.removeVertex(transactionId);
-      return;
-    }
-
-    boolean flagForRemoveVertex = true;
-    int index = -1;
-    for (int i = 0; i < waitlistOperation.size(); i++) {
-      if (waitlistOperation.get(i).getTransId() == transactionId) {
-        index = i;
-      }
-    }
     // if the transaction we want to end exists in waiting list, we try to end it.
     // If succeed, remove it from waitlist, try end every transaction being blocked by it, else keep it in waitlist.
-    if (index != -1) {
-      Operation operation = waitlistOperation.get(index);
-      // if it's read operation
-      if (operation.getType() == Operation.OpType.read) {
-        int variableId = operation.getVariableIndex();
-        if (variableId % 2 == 1) {
-          Site site = siteIdToSite.get(variableId % 10 + 1);
-          if (!site.commit(operation, transaction)) {
-            flagForRemoveVertex = false;
-            waitlistOperation.add(operation);
-          }
-        } else {
-          boolean flag = true;
-          for (int i = 1; i <= 10; i++) {
-            Site site = siteIdToSite.get(i);
-            if (site.commit(operation, transaction)) {
-              flag = false;
-              break;
-            }
-          }
-          if (flag) {
-            flagForRemoveVertex = false;
-            waitlistOperation.add(operation);
-          }
-        }
-      }
-      // if it's write operation
-      else {
-
-      }
-      waitlistOperation.remove(index);
-    }
-    // we end all operations of the transaction. If it blocked, add it to waitlist.
-    // if succeed, we try to end all the neighbors of this transanction
     else {
-      Transaction transaction = transactionIdToTransaction.get(transactionId);
-      List<Operation> operationList = transaction.getOperations();
-
-      // iterate through the whole operation list of the transaction to commit all operations
-      for (Operation operation : operationList) {
-        // if it's read operation
-        if (operation.getType() == Operation.OpType.read) {
-          int variableId = operation.getVariableIndex();
-          if (variableId % 2 == 1) {
-            Site site = siteIdToSite.get(variableId % 10 + 1);
-            if (site.commit(operation, transaction)) {
-              continue;
-            } else {
-              flagForRemoveVertex = false;
-              waitlistOperation.add(operation);
-            }
-          } else {
-            boolean flag = true;
-            for (int i = 1; i <= 10; i++) {
-              Site site = siteIdToSite.get(i);
-              if (site.commit(operation, transaction)) {
-                flag = false;
-                break;
-              }
-            }
-            if (flag) {
-              flagForRemoveVertex = false;
-              waitlistOperation.add(operation);
-            }
-          }
-        }
-        // if it's write operation
-        else {
-
-        }
+      Operation operation = waitlistOperation.get(index);
+      if (!runOperation(operation)) {
+        flagForRemoveVertex = false;
+      }
+      else {
+        waitlistOperation.remove(index);
       }
     }
-
     if (flagForRemoveVertex) {
-      // neighbors are blocked transaction ids
-      List<Integer> neighbors = graph.getNeighbors(transactionId);
       graph.removeVertex(transactionId);
       transactionIdToTransaction.remove(transactionId);
-      for (int neighbor : neighbors) {
-        endTransaction(transactionId);
-      }
+      runWaitList();
     }
   }
-  */
 
-  private boolean runOperation(boolean inWaitList, Operation operation) {
-    // if it's read operation, can not run on failed or recovery site.
-    if (operation.getType() == Operation.OpType.read) {
-      int variableId = operation.getVariableIndex();
-      Transaction transaction = transactionIdToTransaction.get(operation.getTransId());
-      if (variableId % 2 == 1) {
-        Site site = siteIdToSite.get(variableId % 10 + 1);
+  private boolean runOperation(Operation operation) {
+    int variableId = operation.getVariableIndex();
+    Transaction transaction = transactionIdToTransaction.get(operation.getTransId());
+    if (variableId % 2 == 1) {
+      Site site = siteIdToSite.get(variableId % 10 + 1);
+      if (site.commit(operation, transaction)) {
+        return true;
+      }
+      else {
+        return false;
+      }
+    } else {
+      for (int i = 1; i <= 10; i++) {
+        Site site = siteIdToSite.get(i);
         if (site.commit(operation, transaction)) {
           return true;
         }
-        else {
-          return false;
-        }
-      } else {
-        for (int i = 1; i <= 10; i++) {
-          Site site = siteIdToSite.get(i);
-          if (site.commit(operation, transaction)) {
-            return true;
-          }
-        }
-        return false;
       }
-    }
-    // if it's write operation, can not run on failed site but can run on recovery site.
-    else {
-      // TODO:
+      return false;
     }
   }
 
@@ -327,30 +217,6 @@ public class TransactionManager {
     for (int transactionId : transactionIdsOnTheSite) {
       abort(transactionIdToTransaction.get(transactionId));
     }
-    /*
-    for (int transactionId : transactionIdsOnTheSite) {
-      // Abort transaction by removing from multiple places
-      transactionIdToTransaction.remove(transactionId);
-      graph.removeVertex(transactionId);
-      List<Integer> removeIndex = new ArrayList<>();
-      for (int i = 0; i < waitlistOperation.size(); i++) {
-        if (operation.getTransId() == transaction.getTransactionId()) {
-          removeIndex.add(i);
-        }
-      }
-      for (int index : removeIndex) {
-        waitlistOperation.remove(index);
-      }
-    }
-    for (int siteIdForAbortTransaction : siteIdToSite.keySet()) {
-      Site siteForAbortTransaction = siteIdToSite.get(siteIdForAbortTransaction);
-      for (int transactionId : transactionIdsOnTheSite) {
-        if (siteForAbortTransaction.removeTransactions(transactionId)) {
-          System.out.println("Aborting transaction " + transactionId + " at site " + siteIdForAbortTransaction);
-        }
-      }
-    }
-    */
     System.out.println("Site " + siteId + " failed");
     System.out.println();
   }
@@ -362,7 +228,8 @@ public class TransactionManager {
     site.recover();
     for (Operation waitingOperation : waitlistOperation) {
       if (waitingOperation.getType() == Operation.OpType.read) {
-
+        Transaction transaction = transactionIdToTransaction.get(waitingOperation.getTransId());
+        endTransaction(transaction.getTransactionId());
       }
     }
     System.out.println("Site " + siteId + " recovered");
@@ -398,11 +265,12 @@ public class TransactionManager {
     System.out.println();
   }
 
-  public void readOperation(int transactionId, int variableId) {
+  public boolean readOperation(int transactionId, int variableId) {
+    boolean res = true;
     if (!transactionIdToTransaction.containsKey(transactionId)) {
       System.err.println();
       System.err.println("Aborted transaction trying to perform read operation");
-      return;
+      return res;
     }
     Transaction transaction = transactionIdToTransaction.get(transactionId);
     // Add read operation of read only transaction
@@ -434,29 +302,13 @@ public class TransactionManager {
       // if odd indexed variable, only one site
       if (variableId % 2 == 1) {
         Site site = siteIdToSite.get(variableId % 10 + 1);
-        site.addLock(variableId, new Lock(variableId, transactionId, Lock.lockType.READ));
-
-        // Add edge to graph by iterating lock table
-        List<Lock> lockTable = site.getLockTable(variableId);
-        for (Lock lock : lockTable) {
-          if (lock.getType() == Lock.lockType.WRITE && lock.getTranscId() != transactionId) {
-            graph.addNeighbor(lock.getTranscId(), transactionId);
-          }
-        }
-
         Operation operation = new Operation(Operation.OpType.read, variableId, operationTimestamp, transactionId);
-        site.addOperation(transactionId, operation);
-        Operation operation1 = new Operation(Operation.OpType.read, variableId, operationTimestamp, transactionId);
-        transactionIdToTransaction.get(transactionId).addOperations(operation1);
-        deadlockDetectAndAbort();
-      }
-      // if even indexed variable, multiple site
-      else {
-        List<Integer> siteIds = variableIdToSiteId.get(variableId);
-        for (int siteId : siteIds) {
-          Site site = siteIdToSite.get(siteId);
-          site.addLock(variableId, new Lock(variableId, transactionId, Lock.lockType.READ));
-
+        if (site.addLock(variableId, new Lock(variableId, transactionId, Lock.lockType.READ))) {
+          site.addOperation(transactionId, operation);
+        }
+        else {
+          waitlistOperation.add(operation);
+          res = false;
           // Add edge to graph by iterating lock table
           List<Lock> lockTable = site.getLockTable(variableId);
           for (Lock lock : lockTable) {
@@ -464,46 +316,65 @@ public class TransactionManager {
               graph.addNeighbor(lock.getTranscId(), transactionId);
             }
           }
-
-          Operation operation = new Operation(Operation.OpType.read, variableId, operationTimestamp, transactionId);
-          site.addOperation(transactionId, operation);
+          deadlockDetectAndAbort();
         }
 
+        //Operation operation1 = new Operation(Operation.OpType.read, variableId, operationTimestamp, transactionId);
+        //transactionIdToTransaction.get(transactionId).addOperations(operation1);
+      }
+      // if even indexed variable, multiple site
+      else {
+        List<Integer> siteIds = variableIdToSiteId.get(variableId);
+        boolean flag = false;
         Operation operation1 = new Operation(Operation.OpType.read, variableId, operationTimestamp, transactionId);
-        transactionIdToTransaction.get(transactionId).addOperations(operation1);
-        deadlockDetectAndAbort();
+        for (int siteId : siteIds) {
+          Site site = siteIdToSite.get(siteId);
+          Operation operation = new Operation(Operation.OpType.read, variableId, operationTimestamp, transactionId);
+          if (site.addLock(variableId, new Lock(variableId, transactionId, Lock.lockType.READ))) {
+            site.addOperation(transactionId, operation);
+            flag = true;
+          }
+        }
+        if (!flag) {
+          waitlistOperation.add(operation1);
+          res = false;
+          // Add edge to graph by iterating lock table
+          Site site = siteIdToSite.get(1);
+          for (int siteId : siteIdToSite.keySet()) {
+            if (siteIdToSite.get(siteId).getSiteStatus() == Site.SiteStatus.NORMAL) {
+              site = siteIdToSite.get(siteId);
+              break;
+            }
+          }
+          List<Lock> lockTable = site.getLockTable(variableId);
+          for (Lock lock : lockTable) {
+            if (lock.getType() == Lock.lockType.WRITE && lock.getTranscId() != transactionId) {
+              graph.addNeighbor(lock.getTranscId(), transactionId);
+            }
+          }
+          deadlockDetectAndAbort();
+        }
+
+        //Operation operation1 = new Operation(Operation.OpType.read, variableId, operationTimestamp, transactionId);
+        //transactionIdToTransaction.get(transactionId).addOperations(operation1);
       }
     }
+    return res;
   }
 
-  private void writeOperation(int transactionId, int variableId, int newValue) {
+  private boolean writeOperation(int transactionId, int variableId, int newValue) {
+    boolean res = true;
     Date operationTimestamp = new Date();
     // if odd indexed variable, only one site
     if (variableId % 2 == 1) {
-      Site site = siteIdToSite.get(variableId % 10 + 1);
-      site.addLock(variableId, new Lock(variableId, transactionId, Lock.lockType.WRITE));
-
-      // Add edge to graph by iterating lock table
-      List<Lock> lockTable = site.getLockTable(variableId);
-      for (Lock lock : lockTable) {
-        if (lock.getTranscId() != transactionId) {
-          graph.addNeighbor(lock.getTranscId(), transactionId);
-        }
-      }
-
       Operation operation = new Operation(Operation.OpType.write, variableId, newValue, operationTimestamp, transactionId);
-      site.addOperation(transactionId, operation);
-      Operation operation1 = new Operation(Operation.OpType.write, variableId, newValue, operationTimestamp, transactionId);
-      transactionIdToTransaction.get(transactionId).addOperations(operation1);
-      deadlockDetectAndAbort();
-    }
-    // if even indexed variable, multiple site
-    else {
-      List<Integer> siteIds = variableIdToSiteId.get(variableId);
-      for (int siteId : siteIds) {
-        Site site = siteIdToSite.get(siteId);
-        site.addLock(variableId, new Lock(variableId, transactionId, Lock.lockType.WRITE));
-
+      Site site = siteIdToSite.get(variableId % 10 + 1);
+      if (site.addLock(variableId, new Lock(variableId, transactionId, Lock.lockType.WRITE))) {
+        site.addOperation(transactionId, operation);
+      }
+      else {
+        waitlistOperation.add(operation);
+        res = false;
         // Add edge to graph by iterating lock table
         List<Lock> lockTable = site.getLockTable(variableId);
         for (Lock lock : lockTable) {
@@ -511,15 +382,64 @@ public class TransactionManager {
             graph.addNeighbor(lock.getTranscId(), transactionId);
           }
         }
-
-        Operation operation = new Operation(Operation.OpType.write, variableId, newValue, operationTimestamp, transactionId);
-        site.addOperation(transactionId, operation);
+        deadlockDetectAndAbort();
       }
 
-      Operation operation1 = new Operation(Operation.OpType.write, variableId, newValue, operationTimestamp, transactionId);
-      transactionIdToTransaction.get(transactionId).addOperations(operation1);
-      deadlockDetectAndAbort();
+      //Operation operation1 = new Operation(Operation.OpType.write, variableId, newValue, operationTimestamp, transactionId);
+      //transactionIdToTransaction.get(transactionId).addOperations(operation1);
     }
+    // if even indexed variable, multiple site
+    else {
+      List<Integer> siteIds = variableIdToSiteId.get(variableId);
+      boolean flag = false;
+      Operation operation1 = new Operation(Operation.OpType.write, variableId, operationTimestamp, transactionId);
+      for (int siteId : siteIds) {
+        Site site = siteIdToSite.get(siteId);
+        Operation operation = new Operation(Operation.OpType.write, variableId, operationTimestamp, transactionId);
+        if (site.getSiteStatus() == Site.SiteStatus.NORMAL) {
+          if (!site.addLock(variableId, new Lock(variableId, transactionId, Lock.lockType.WRITE))) {
+            break;
+          }
+          else {
+            site.addOperation(transactionId, operation);
+            flag = true;
+          }
+        }
+      }
+      if (flag) {
+        for (int siteId : siteIds) {
+          Operation operation = new Operation(Operation.OpType.write, variableId, operationTimestamp, transactionId);
+          Site site = siteIdToSite.get(siteId);
+          if (site.getSiteStatus() == Site.SiteStatus.RECOVERY) {
+            site.addOperation(transactionId, operation);
+          }
+        }
+      }
+      if (!flag) {
+        waitlistOperation.add(operation1);
+        res = false;
+        // Add edge to graph by iterating lock table
+        Site site = siteIdToSite.get(1);
+        for (int siteId : siteIdToSite.keySet()) {
+          if (siteIdToSite.get(siteId).getSiteStatus() == Site.SiteStatus.NORMAL) {
+            site = siteIdToSite.get(siteId);
+            break;
+          }
+        }
+        List<Lock> lockTable = site.getLockTable(variableId);
+        for (Lock lock : lockTable) {
+          if (lock.getTranscId() != transactionId) {
+            graph.addNeighbor(lock.getTranscId(), transactionId);
+          }
+        }
+        deadlockDetectAndAbort();
+      }
+
+      //Operation operation1 = new Operation(Operation.OpType.read, variableId, operationTimestamp, transactionId);
+      //transactionIdToTransaction.get(transactionId).addOperations(operation1);
+    }
+
+    return res;
   }
 
   private void deadlockDetectAndAbort() {
@@ -554,6 +474,22 @@ public class TransactionManager {
     }
     for (int index : removeIndex) {
       waitlistOperation.remove(index);
+    }
+    runWaitList();
+  }
+
+  private void runWaitList() {
+    for (Operation operation : waitlistOperation) {
+      if (operation.getType() == Operation.OpType.read) {
+        if (readOperation(operation.getTransId(), operation.getVariableIndex())) {
+          endTransaction(operation.getTransId());
+        }
+      }
+      else {
+        if (writeOperation(operation.getTransId(), operation.getVariableIndex(), operation.getValue())) {
+          endTransaction(operation.getTransId());
+        }
+      }
     }
   }
 
