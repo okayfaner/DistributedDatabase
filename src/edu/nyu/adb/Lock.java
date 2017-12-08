@@ -1,5 +1,8 @@
 package edu.nyu.adb;
 
+/**
+ * @author Xi Huang
+ */
 public class Lock {
   public static enum lockType {
     READ,
@@ -10,26 +13,32 @@ public class Lock {
   private int varIndex;
   private int transcId;
 
+  /**
+   * constructor for Lock.
+   * @param varIndex id for variable
+   * @param transcId id for transaction
+   * @param type lockType for this lock
+   */
   public Lock(int varIndex, int transcId, lockType type) {
     this.varIndex = varIndex;
     this.transcId = transcId;
     this.type = type;
   }
 
-  public int getVarIndex() {
-    return this.varIndex;
-  }
-
+  /**
+   *
+   * @return this lock's lock type.
+   */
   public lockType getType() {
     return this.type;
   }
 
+  /**
+   * return transaction id.
+   * @return
+   */
   public int getTranscId() {
     return this.transcId;
-  }
-
-  public void setType(lockType type) {
-    this.type = type;
   }
 
 

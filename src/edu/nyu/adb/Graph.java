@@ -5,8 +5,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * @author Xi Huang
+ */
 public class Graph {
-  private List<Vertex> graph;
+  private List<Vertex> graph; // list of vertex
 
   public Graph() {
     graph = new ArrayList<>();
@@ -16,7 +19,11 @@ public class Graph {
     graph.add(new Vertex(vertexId));
   }
 
-  // will remove duplicate
+  /**
+   * add a neighbor for give vertex.
+   * @param vertexId the vertex's neighbor you want to add
+   * @param neighborId the neighbor you want to add.
+   */
   public void addNeighbor(int vertexId, int neighborId) {
     Vertex vertex = getVertex(vertexId);
     Vertex neighbor = getVertex(neighborId);
@@ -25,6 +32,11 @@ public class Graph {
     }
   }
 
+  /**
+   * return a vertex for this given vertex ID.
+   * @param vertexId
+   * @return
+   */
   private Vertex getVertex(int vertexId) {
     for (Vertex vertex : graph) {
       if (vertex.getVertexId() == vertexId) {
@@ -34,16 +46,11 @@ public class Graph {
     return null;
   }
 
-  public List<Integer> getNeighbors(int vertexId) {
-    Vertex vertex = getVertex(vertexId);
-    List<Integer> result = new ArrayList<>();
-    for (Vertex temp : vertex.getNeighbors()) {
-      result.add(temp.getVertexId());
-    }
-    return result;
-  }
 
-  // remove vertex
+  /**
+   * remove a vertex matching the given id of vertext if it exits in this graph.
+   * @param vertexId
+   */
   public void removeVertex(int vertexId) {
     int i;
     for (i = 0; i < graph.size(); i ++) {
@@ -60,6 +67,12 @@ public class Graph {
   }
 
 
+  /**
+   * detect if there is a cycle in this graph,
+   * if exits, return all the vertex in this cycle
+   * if not, return a empty list.
+   * @return
+   */
   public List<Integer> detectDag() {
     int[] visited = new int[graph.size()];
 
@@ -86,6 +99,15 @@ public class Graph {
 
   }
 
+  /**
+   * dfs used for detection.
+   * @param i the index for vertex in this graph,
+   * @param graph
+   * @param visited a int array to store the status of every vertex
+   * @param result the result to store every vertex in this cycle if cycle exits.
+   * @return true, there is a cycle,
+   *         false, not.
+   */
   private boolean dfs(int i, List<Vertex> graph, int[] visited, Set<Integer> result) {
     if (visited[i] == 1) {
       result.add(i);

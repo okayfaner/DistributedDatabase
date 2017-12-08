@@ -1,7 +1,8 @@
 package edu.nyu.adb;
 
-import java.util.Date;
-
+/**
+ * @author Oukan Fan
+ */
 public class Operation {
 
   public enum OpType {
@@ -9,11 +10,11 @@ public class Operation {
     write
   }
 
-  private OpType opType;
-  private int transId;
-  private int variableIndex;
-  private int value = 0;
-  private long timestamp;
+  private OpType opType;// operation type
+  private int transId;// id for transaction
+  private int variableIndex;// variable index
+  private int value = 0;// the value to write in this variable if it is write operation type
+  private long timestamp;// time stamp for this operation
 
   // For read operation
   public Operation(OpType type, int variableIndex, long timestamp, int transId) {
@@ -32,33 +33,46 @@ public class Operation {
     this.transId = transId;
   }
 
+  /**
+   * return transID
+   * @return
+   */
   public int getTransId() {
     return this.transId;
   }
 
+  /**
+   * return operation type.
+   * @return
+   */
   public OpType getType() {
     return this.opType;
   }
 
+  /**
+   * return variable index
+   * @return
+   */
   public int getVariableIndex() {
     return variableIndex;
   }
 
+  /**
+   * return the write value.
+   * @return
+   */
   public int getValue() {
     return value;
   }
 
-  public void setValue(int value) {
-    this.value = value;
-  }
-
+  /**
+   * return time stamp
+   * @return
+   */
   public long getTimestamp() {
     return timestamp;
   }
 
-  public void setTimestamp(long date) {
-    this.timestamp = date;
-  }
 
   @Override
   public int hashCode() {

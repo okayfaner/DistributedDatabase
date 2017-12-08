@@ -3,28 +3,51 @@ package edu.nyu.adb;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author Xi Huang
+ */
 public class Vertex {
 
-  private int vertexId;
-  private List<Vertex> neighbors;
+  private int vertexId;// vertex id, same as transaction id.
+  private List<Vertex> neighbors;// list of vertex as its neighbor
 
+  /**
+   * contructor for Vertex.
+   * @param vertexId id for the related transaction
+   */
   public Vertex(int vertexId) {
     this.vertexId = vertexId;
     neighbors = new ArrayList<>();
   }
 
+  /**
+   * return its id.
+   * @return
+   */
   public int getVertexId() {
     return this.vertexId;
   }
 
+  /**
+   * add a vertex to its neighbors list.
+   * @param vertex
+   */
   public void addNeighbor(Vertex vertex) {
     neighbors.add(vertex);
   }
 
+  /**
+   * return its neighbors.
+   * @return
+   */
   public List<Vertex> getNeighbors() {
     return this.neighbors;
   }
 
+  /**
+   * remove a given vertex matching the vertex id from this vertex's neighbors list if it exits.
+   * @param vertexId if of the vertex you want to remove.
+   */
   public void removeNeighbor(int vertexId) {
     int i;
 
