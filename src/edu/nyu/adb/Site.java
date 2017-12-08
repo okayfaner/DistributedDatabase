@@ -216,14 +216,14 @@ public class Site {
 
           Variable variable = variableTable.get(varIndex);
           System.out.println("Variable x" + variable.getIndex() +
-                  " from T" + trans.getTransactionId() + " has value " + variable.getVersionValue(operation.getTimestamp()) + " at site" + siteIndex);
+                  " from T" + trans.getTransactionId() + " READ value " + variable.getVersionValue(operation.getTimestamp()) + " at site" + siteIndex);
 
           return true;
         } else {
           if (siteStatus == SiteStatus.NORMAL) {
             Variable variable = variableTable.get(varIndex);
             System.out.println("Variable x" + variable.getIndex() +
-                    " from T" + trans.getTransactionId() + " has value " + variable.getVersionValue(operation.getTimestamp()) + " at site" + siteIndex);
+                    " from T" + trans.getTransactionId() + " READ value " + variable.getVersionValue(operation.getTimestamp()) + " at site" + siteIndex);
 
             return true;
           }
@@ -257,14 +257,14 @@ public class Site {
 
           Variable variable = variableTable.get(varIndex);
           System.out.println("Variable x" + variable.getIndex() +
-                  " from T" + trans.getTransactionId() + " has value " + variable.getValue() + " at site" + siteIndex);
+                  " from T" + trans.getTransactionId() + " READ value " + variable.getValue() + " at site" + siteIndex);
           //dropLock(varIndex, trans.getTransactionId());
           return true;
         } else {
           if (siteStatus == SiteStatus.NORMAL) {
             Variable variable = variableTable.get(varIndex);
             System.out.println("Variable x" + variable.getIndex() +
-                    " from T" + trans.getTransactionId() + " has value " + variable.getValue() + " at site" + siteIndex);
+                    " from T" + trans.getTransactionId() + " READ value " + variable.getValue() + " at site" + siteIndex);
             //dropLock(varIndex, trans.getTransactionId());
             return true;
           }
@@ -293,7 +293,7 @@ public class Site {
           var.setValue(operation.getValue());
           this.siteStatus = SiteStatus.NORMAL;
           System.out.println("Variable x" + var.getIndex() +
-                  " from T" + trans.getTransactionId() + " write value " + var.getValue() + " at site" + siteIndex);
+                  " from T" + trans.getTransactionId() + " WRITE value " + var.getValue() + " at site" + siteIndex);
           System.out.println("\nSite " + this.siteIndex + " become NORMAL due to T" + trans.getTransactionId() + " WRITE x"
                   + varIndex + " with value " + var.getValue());
           variableTable.put(varIndex, var);
@@ -303,7 +303,7 @@ public class Site {
           Variable var = variableTable.get(varIndex);
           var.setValue(operation.getValue());
           System.out.println("Variable x" + var.getIndex() +
-                  " from T" + trans.getTransactionId() + " write value " + var.getValue() + " at site" + siteIndex);
+                  " from T" + trans.getTransactionId() + " WRITE value " + var.getValue() + " at site" + siteIndex);
           variableTable.put(varIndex, var);
           dropLock(varIndex, trans.getTransactionId());
           return true;
