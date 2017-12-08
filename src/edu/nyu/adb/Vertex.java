@@ -33,7 +33,7 @@ public class Vertex {
         break;
       }
     }
-    if (!neighbors.isEmpty()) {
+    if (!neighbors.isEmpty() && i < neighbors.size()) {
       neighbors.remove(i);
     }
   }
