@@ -140,7 +140,7 @@ public class TransactionManager {
     }
     else {
       transactionIdToTransaction.put(transactionId, new Transaction(transactionId, System.nanoTime(), Transaction.TranType.RO));
-      //graph.addVertex(transactionId);
+      graph.addVertex(transactionId);
     }
     System.out.println();
   }
@@ -228,8 +228,11 @@ public class TransactionManager {
         waitlistOperation.remove(index);
       }
     }
-    if (flagForRemoveVertex && transactionIdToTransaction.get(transactionId).getType() == Transaction.TranType.RW) {
-      graph.removeVertex(transactionId);
+    if (flagForRemoveVertex) {
+      boolean flag = transactionIdToTransaction.get(transactionId).getType() == Transaction.TranType.RW;
+      if (flag) {
+        graph.removeVertex(transactionId);
+      }
       System.out.println();
       System.out.println("T" + transactionId + " Commit, due to " +
               (index == -1 ? "normal commit" : "being unblocked and executed"));
@@ -239,7 +242,9 @@ public class TransactionManager {
         siteIdToSite.get(temp).removeTransactions(transactionId);
       }
       transactionIdToSites.remove(transactionId);
-      runWaitList();
+      if (flag) {
+        runWaitList();
+      }
     }
   }
 
@@ -524,7 +529,7 @@ public class TransactionManager {
       }
       List<String> list = new ArrayList<>();
       for (Integer i : deadLockTransactionIds) {
-        list.add("T" + i + " ");
+        list.add("T" + i);
       }
       System.out.println("\nDeadlock detected: " + list.toString());
       System.out.println("\nAbort youngest transaction: T" + transaction.getTransactionId() + "\n");
