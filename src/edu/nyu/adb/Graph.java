@@ -17,10 +17,13 @@ public class Graph {
   }
 
   // v2 wait for v1, so get 2 -> 1
+  // will remove duplicate
   public void addNeighbor(int vertexId, int neighborId) {
     Vertex vertex = getVertex(vertexId);
     Vertex neighbor = getVertex(neighborId);
-    vertex.addNeighbor(neighbor);
+    if (!vertex.getNeighbors().contains(neighbor)) {
+      vertex.addNeighbor(neighbor);
+    }
   }
 
   private Vertex getVertex(int vertexId) {

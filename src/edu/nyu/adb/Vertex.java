@@ -33,4 +33,26 @@ public class Vertex {
       }
     }
   }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int hash = 31;
+    hash = prime * hash + (vertexId ^ (vertexId >>> 16));
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    Vertex other = (Vertex) obj;
+    if (vertexId != other.vertexId)
+      return false;
+    return true;
+  }
 }
