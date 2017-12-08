@@ -1,5 +1,7 @@
 package edu.nyu.adb;
 
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -228,6 +230,10 @@ public class TransactionManager {
     }
     if (flagForRemoveVertex && transactionIdToTransaction.get(transactionId).getType() == Transaction.TranType.RW) {
       graph.removeVertex(transactionId);
+      System.out.println();
+      System.out.println("T" + transactionId + " Commit, due to " +
+              (index == -1 ? "normal commit" : "being unblocked and executed"));
+      System.out.println();
       transactionIdToTransaction.remove(transactionId);
       for(Integer temp : transactionIdToSites.get(transactionId) ) {
         siteIdToSite.get(temp).removeTransactions(transactionId);
