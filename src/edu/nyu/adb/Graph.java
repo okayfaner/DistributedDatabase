@@ -16,7 +16,6 @@ public class Graph {
     graph.add(new Vertex(vertexId));
   }
 
-  // v2 wait for v1, so get 2 -> 1
   // will remove duplicate
   public void addNeighbor(int vertexId, int neighborId) {
     Vertex vertex = getVertex(vertexId);
@@ -115,20 +114,4 @@ public class Graph {
     return isCycle;
   }
 
-//  public static void main (String[] args) {
-//    Graph p = new Graph();
-//    Vertex v1 = new Vertex(1);
-//    Vertex v2 = new Vertex(2);
-//    Vertex v3 = new Vertex(3);
-//
-//
-//    p.addVertex(v1);
-//    p.addVertex(v2);
-//    p.addVertex(v3);
-//    p.addNeighbor(1,v2);
-//    p.addNeighbor(2,v3);
-//    p.addNeighbor(3,v2);
-//
-//    System.out.println(p.detectDag());
-//  }
 }
