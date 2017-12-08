@@ -7,7 +7,6 @@ public class Variable {
   private int value;
   private TreeMap<Long, Integer> versions;
   private long lastCommitTime;
-  private boolean accessibleForRead;
 
   /**
    *
@@ -17,7 +16,6 @@ public class Variable {
   public Variable(int index, int value) {
     this.index = index;
     this.value = value;
-    this.accessibleForRead = true;
     this.lastCommitTime = System.nanoTime();
     this.versions = new TreeMap<>();
     versions.put(this.lastCommitTime, this.value);
@@ -40,14 +38,6 @@ public class Variable {
 
   public void setIndex(int index) {
     this.index = index;
-  }
-
-  public boolean isAccessibleForRead() {
-    return this.accessibleForRead;
-  }
-
-  public void setAccessibleForRead(boolean t) {
-    this.accessibleForRead = t;
   }
 
   public long getLastCommitTime() {
@@ -74,7 +64,6 @@ public class Variable {
     hash = prime * hash + index;
     hash = prime * hash + value;
     hash = prime * hash + (int)(lastCommitTime ^ lastCommitTime >>> 32);
-    hash = prime * hash + (accessibleForRead ? 0 : 1);
     return hash;
   }
 }
