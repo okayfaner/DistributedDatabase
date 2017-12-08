@@ -1,9 +1,11 @@
 package edu.nyu.adb;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
+/**
+ * @author Oukan Fan
+ */
 public class Transaction {
   public static enum TranType {
     RO,

@@ -1,5 +1,8 @@
 package edu.nyu.adb;
 
+/**
+ * @author Oukan Fan
+ */
 public class Operation {
 
   public enum OpType {

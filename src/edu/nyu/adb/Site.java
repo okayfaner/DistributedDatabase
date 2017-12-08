@@ -2,7 +2,9 @@ package edu.nyu.adb;
 
 import java.util.*;
 
-
+/**
+ * @author Xi Huang
+ */
 public class Site {
 
   public enum SiteStatus {

@@ -3,6 +3,9 @@ package edu.nyu.adb;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author Xi Huang
+ */
 public class Vertex {
 
   private int vertexId;// vertex id, same as transaction id.

@@ -2,6 +2,9 @@ package edu.nyu.adb;
 
 import java.util.*;
 
+/**
+ * @author Xi Huang
+ */
 public class Variable {
   private int index;
   private int value;

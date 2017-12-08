@@ -1,5 +1,8 @@
 package edu.nyu.adb;
 
+/**
+ * @author Xi Huang
+ */
 public class Lock {
   public static enum lockType {
     READ,

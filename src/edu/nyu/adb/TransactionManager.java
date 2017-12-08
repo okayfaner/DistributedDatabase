@@ -1,13 +1,14 @@
 package edu.nyu.adb;
 
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * @author Oukan Fan
+ */
 public class TransactionManager {
 
   private File file;// input file for read.
@@ -402,7 +403,9 @@ public class TransactionManager {
           Site site = siteIdToSite.get(siteId);
           Operation operation = new Operation(Operation.OpType.read, variableId, operationTimestamp, transactionId);
           site.addOperation(transactionId, operation);
-          site.commit(operation, transaction);
+          if (site.commit(operation, transaction)) {
+            break;
+          }
         }
         Operation operation1 = new Operation(Operation.OpType.read, variableId, operationTimestamp, transactionId);
         transactionIdToTransaction.get(transactionId).addOperations(operation1);
@@ -448,6 +451,7 @@ public class TransactionManager {
             site.addOperation(transactionId, operation);
             flag = true;
             site.commit(operation, transaction);
+            break;
           }
         }
         if (!flag) {
