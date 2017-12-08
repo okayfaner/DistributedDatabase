@@ -258,14 +258,12 @@ public class Site {
           Variable variable = variableTable.get(varIndex);
           System.out.println("Variable x" + variable.getIndex() +
                   " from T" + trans.getTransactionId() + " READ value " + variable.getValue() + " at site" + siteIndex);
-          //dropLock(varIndex, trans.getTransactionId());
           return true;
         } else {
           if (siteStatus == SiteStatus.NORMAL) {
             Variable variable = variableTable.get(varIndex);
             System.out.println("Variable x" + variable.getIndex() +
                     " from T" + trans.getTransactionId() + " READ value " + variable.getValue() + " at site" + siteIndex);
-            //dropLock(varIndex, trans.getTransactionId());
             return true;
           }
 
@@ -310,7 +308,6 @@ public class Site {
         }
       }
     }
-
     return false;
   }
 }
